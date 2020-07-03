@@ -1,4 +1,4 @@
-from BanditAlgorithm import BanditAlgorithm
+from algorithms.BanditAlgorithm import BanditAlgorithm
 from utils import update_mean_inc
 
 import numpy as np
@@ -22,6 +22,7 @@ class EpsilonGreedy(BanditAlgorithm):
         self.optimistic_factor = optimistic_factor
         self.epsilon = epsilon
         self.initialize_vars()
+        self.name = 'eps-greedy_{:.5f}'.format(epsilon)
         return
 
     def reset(self):
@@ -44,13 +45,33 @@ class EpsilonGreedy(BanditAlgorithm):
 
     def update(self, arm, reward):
         self.n_choice[arm] += 1
-        self.sample_mean[arm] = update_mean_inc(self.sample_mean[arm], reward, self.n_choice[arm])
+        self.sample_mean[arm] = update_mean_inc(
+            self.sample_mean[arm], reward, self.n_choice[arm]
+        )
 
     def play(self):
         chosen_arm = self.select_arm()
         return chosen_arm
 
 
+class EpsilonGreedyNonstationary(EpsilonGreedy):
+    def __init__(self, n_arms, epsilon, alpha, optimistic_factor=None):
+        self.n_arms = n_arms
+        self.arms = np.arange(n_arms)
+        self.optimistic_factor = optimistic_factor
+        self.epsilon = epsilon
+        self.mean_update_factor = alpha
+        self.initialize_vars()
+        self.name = 'nonstationary_eps-greedy_{:.5f}'.format(epsilon)
+        #print(self.mean_update_factor)
+        return
 
+    def update(self, arm, reward):
+        self.n_choice[arm] += 1
+        self.sample_mean[arm] = update_mean_inc(
+            self.sample_mean[arm], reward, self.n_choice[arm], update_factor=self.mean_update_factor
+        )
 
-
+    def play(self):
+        chosen_arm = self.select_arm()
+        return chosen_arm

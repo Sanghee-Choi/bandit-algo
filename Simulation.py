@@ -1,8 +1,9 @@
 import numpy as np
 
 class Simulation():
-    def __init__(self, models, n_arms, n_timestpes):
+    def __init__(self, models, n_arms, problem, n_timestpes):
         self.n_arms = n_arms
+        self.problem = problem
         self.n_timestpes = n_timestpes
         self.n_models = len(models)
         self.models = models
@@ -15,15 +16,6 @@ class Simulation():
         self.opt_arm_ratio = np.zeros((self.n_models, self.n_timestpes))
         self.regret = np.zeros((self.n_models, self.n_timestpes))
         self.cumulative_reward = np.zeros((self.n_models, self.n_timestpes))
-
-    def set_problem(self, means, stds, opt_arm):
-        self.means = means
-        self.stds = stds
-        self.opt_arm = opt_arm
-        self.opt_reward = max(means)
-
-    def generate_reward(self, arm):
-        return np.random.normal(self.means[arm], self.stds[arm])
        
     def run(self):
         for t in np.arange(self.n_timestpes):
@@ -32,12 +24,12 @@ class Simulation():
                     arm = model.play(t)
                 else:    
                     arm = model.play()
-                if self.opt_arm == arm:
-                    self.opt_arm_ratio[idx][t] += 1
-                reward = self.generate_reward(arm)
+                reward, instantaneous_regret, is_opt = self.problem.gen_reward(arm, t)
                 model.update(arm, reward)
-                self.regret[idx][t] += (self.opt_reward - reward) 
-                self.cumulative_reward[idx][t] += reward 
+                self.regret[idx][t] = self.regret[idx][t-1] + instantaneous_regret if t != 0 else instantaneous_regret
+                if is_opt == True:
+                    self.opt_arm_ratio[idx][t] += 1
+                self.cumulative_reward[idx][t] = self.cumulative_reward[idx][t-1] + reward if t != 0 else reward
 
         return self.opt_arm_ratio, self.regret, self.cumulative_reward
 

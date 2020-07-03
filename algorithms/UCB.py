@@ -1,4 +1,4 @@
-from BanditAlgorithm import BanditAlgorithm
+from algorithms.BanditAlgorithm import BanditAlgorithm
 from utils import update_mean_inc, update_var_inc
 
 import numpy as np
@@ -23,6 +23,7 @@ class UCB(BanditAlgorithm):
         self.optimistic_factor = optimistic_factor
         self.const_c = const_c
         self.initialize_vars()
+        self.name = 'UCB_{:.5f}'.format(const_c)
         return
 
     def reset(self):
